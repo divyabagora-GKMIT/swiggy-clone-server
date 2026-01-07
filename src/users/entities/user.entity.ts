@@ -10,6 +10,9 @@ import {
 } from 'typeorm';
 import { UserRole } from './user_role.entity';
 import { Address } from 'src/users/entities/address.entity';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Order } from 'src/orders/entites/order.entity';
+import { Rating } from 'src/ratings/entities/rating.entity';
 
 @Entity('users')
 export class User {
@@ -39,6 +42,16 @@ export class User {
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];
+
+  @OneToMany(() => Restaurant, (restaurant) => restaurant.user)
+  restaurants: Restaurant[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
+
+  @OneToMany(()=> Rating , rating => rating.user)
+  ratings : Rating[]
+
 
   @CreateDateColumn({
     name: 'created_at',
