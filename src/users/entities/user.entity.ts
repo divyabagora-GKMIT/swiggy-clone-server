@@ -1,6 +1,18 @@
 import { Exclude } from 'class-transformer';
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { UserRole } from './user_role.entity';
+import { Address } from 'src/users/entities/address.entity';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Order } from 'src/orders/entites/order.entity';
+import { Rating } from 'src/ratings/entities/rating.entity';
 
 @Entity('users')
 export class User {
@@ -14,19 +26,32 @@ export class User {
   name: string;
 
   @Column({
-    nullable : false,
-    length : 254
+    nullable: false,
+    length: 254,
   })
-  email : string
+  email: string;
 
   @Column({
-    nullable : false,
-    length : 15
+    nullable: false,
+    length: 15,
   })
-  phone : string
+  phone: string;
 
-  @OneToMany(() => UserRole, userRole => userRole.user)
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses: Address[];
+
+  @OneToMany(() => Restaurant, (restaurant) => restaurant.user)
+  restaurants: Restaurant[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
+
+  @OneToMany(()=> Rating , rating => rating.user)
+  ratings : Rating[]
+
 
   @CreateDateColumn({
     name: 'created_at',
