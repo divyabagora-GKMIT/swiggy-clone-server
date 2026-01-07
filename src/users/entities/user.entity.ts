@@ -1,5 +1,6 @@
 import { Exclude } from 'class-transformer';
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { UserRole } from './user_role.entity';
 
 @Entity('users')
 export class User {
@@ -24,11 +25,8 @@ export class User {
   })
   phone : string
 
-  @Column({
-    nullable : false,
-    length : 10
-  })
-  pincode : string
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  userRoles: UserRole[];
 
   @CreateDateColumn({
     name: 'created_at',
