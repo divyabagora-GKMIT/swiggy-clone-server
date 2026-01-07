@@ -10,7 +10,10 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToOne,
+  OneToMany,
 } from "typeorm";
+import { Rating } from "src/ratings/entities/rating.entity";
+import { OrderItem } from "src/order-items/order-items.entity";
 
 export enum OrderStatus {
   PREPARING = "Preparing",
@@ -36,6 +39,9 @@ export class Order {
   @ManyToOne(() => Restaurant, restaurant => restaurant.orders)
   @JoinColumn({ name: "restaurant_id" })
   restaurant: Restaurant;
+
+  @OneToMany(() => OrderItem , orderItem => orderItem.order)
+  orderItems : OrderItem[]
 
   @Column({
     type: "enum",

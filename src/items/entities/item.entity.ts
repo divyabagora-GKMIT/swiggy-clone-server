@@ -1,4 +1,7 @@
+import { Rating } from "src/ratings/entities/rating.entity";
 import { Restaurant } from "src/restaurants/entities/restaurant.entity";
+import { Cart } from "src/users/entities/cart.entity";
+import { CartItem } from "src/users/entities/cartItems.entity";
 import {
   Column,
   Entity,
@@ -8,6 +11,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from "typeorm";
 
 export enum ItemClassification {
@@ -23,6 +27,12 @@ export class Item {
   @ManyToOne(() => Restaurant, restaurant => restaurant.items)
   @JoinColumn({ name: "restaurant_id" })
   restaurant: Restaurant;
+
+  @OneToMany(() => Rating , rating => rating.item)
+  ratings: Rating[]
+
+  @OneToMany(() => CartItem, cartItem => cartItem.item)
+  cartItems: CartItem[];
 
   @Column({
     type: "varchar",

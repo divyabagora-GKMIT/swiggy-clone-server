@@ -13,7 +13,6 @@ import { Cart } from './cart.entity';
 import { Item } from 'src/items/entities/item.entity';
 
 @Entity('cart_items')
-@Unique(['cart_id', 'item_id'])
 export class CartItem {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,9 +21,9 @@ export class CartItem {
   @JoinColumn({ name: 'cart_id' })
   cart: Cart;
 
-  @ManyToOne(() => Item, (item) => item.cart)
+  @ManyToOne(() => Item, (item) => item.cartItems)
   @JoinColumn({ name: 'item_id' })
-  items: Item[];
+  item: Item;
 
   @Column({ type: 'int' })
   quantity: number;

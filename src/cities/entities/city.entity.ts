@@ -10,7 +10,9 @@ import {
   DeleteDateColumn,
   JoinColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 
 @Entity('cities')
 export class City {
@@ -30,6 +32,9 @@ export class City {
 
   @ManyToOne(() => Address, (address) => address.city)
   addresses: Address[];
+
+  @OneToMany(() => Restaurant, restaurant => restaurant.city)
+  restaurants: Restaurant[];
 
   @CreateDateColumn({
     name: 'created_at',
