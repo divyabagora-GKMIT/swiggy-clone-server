@@ -26,13 +26,6 @@ export class Rating {
   user: User;
 
   /**
-   * Order related to this rating
-   */
-  //   @ManyToOne(() => Order, order => order.ratings)
-  //   @JoinColumn({ name: "order_id" })
-  //   order: Order;
-
-  /**
    * Rated item (optional if rating is for restaurant)
    */
   @ManyToOne(() => Item, (item) => item.ratings, { nullable: true })
