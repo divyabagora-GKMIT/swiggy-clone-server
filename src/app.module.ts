@@ -28,7 +28,7 @@ import { Cart } from './users/entities/cart.entity';
 import { CartItem } from './users/entities/cartItems.entity';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { OrderItemsModule } from './order-items/order-items.module';
-import { OrderItem } from './order-items/order-items.entity';
+import { OrderItem } from './order-items/entities/order-items.entity';
 
 @Module({
   imports: [
@@ -63,10 +63,9 @@ import { OrderItem } from './order-items/order-items.entity';
           Cart,
           CartItem,
           Transaction,
-          OrderItem
+          OrderItem,
         ],
         // autoLoadEntities: true,
-        synchronize: true,
       }),
     }),
     OrdersModule,
