@@ -1,0 +1,54 @@
+import { Exclude } from 'class-transformer';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    nullable: false,
+    length: 30,
+  })
+  name: string;
+
+  @Column({
+    nullable : false,
+    length : 254
+  })
+  email : string
+
+  @Column({
+    nullable : false,
+    length : 15
+  })
+  phone : string
+
+  @Column({
+    nullable : false,
+    length : 10
+  })
+  pincode : string
+
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    name: 'updated_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
+  @Exclude()
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    nullable: true,
+    type: 'timestamp',
+  })
+  deletedAt: Date;
+}
