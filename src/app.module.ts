@@ -6,6 +6,8 @@ import { RolesModule } from './roles/roles.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './users/entities/user.entity';
+import { Role } from './roles/entities/role.entity';
+import { UserRole } from './users/entities/user_role.entity';
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { User } from './users/entities/user.entity';
         username: configService.get<string>('DB_USERNAME', 'divyabagora'),
         password: configService.get<string>('DB_PASSWORD', 'divya'),
         database: configService.get<string>('DB_NAME', 'swiggydb'),
-        entities: [User],
+        entities: [User, Role, UserRole],
         synchronize: true,
       }),
     }),
