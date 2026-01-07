@@ -25,12 +25,6 @@ export class User {
   })
   phone : string
 
-  @Column({
-    nullable : false,
-    length : 10
-  })
-  pincode : string
-
   @OneToMany(() => UserRole, userRole => userRole.user)
   userRoles: UserRole[];
 
