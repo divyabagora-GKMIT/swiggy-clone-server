@@ -1,7 +1,9 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/roles/entities/role.entity';
@@ -11,6 +13,13 @@ import { Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { randomInt } from 'crypto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { type Cache } from 'cache-manager';
+import { VerifyOtpDto } from './dto/verifyOtp.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { config } from 'process';
 
 @Injectable()
 export class AuthService {
@@ -23,9 +32,16 @@ export class AuthService {
 
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly mailService: MailerService,
+
+    private jwtService: JwtService,
+
+    private configService: ConfigService,
   ) {}
 
-  async createUser(registerUserDto: RegisterUserDto) {
+  async createUser(registerUserDto: RegisterUserDto): Promise<void> {
     const userExist = await this.userRepository.findOne({
       where: { email: registerUserDto.email },
     });
@@ -58,7 +74,7 @@ export class AuthService {
     await this.userRoleRepository.save(userRole);
   }
 
-  async loginUser(loginDto: LoginDto) {
+  async loginUser(loginDto: LoginDto): Promise<void> {
     const userExist = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -68,6 +84,71 @@ export class AuthService {
     }
 
     const otp = randomInt(1000, 9999).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await this.cacheService.set(
+      loginDto.email,
+      otp.toString(),
+      this.configService.get<number>('CACHE_TTL'),
+    );
+
+    const message = otp;
+    await this.mailService.sendMail({
+      from: 'divybagora1122@gmail.com',
+      to: loginDto.email,
+      subject: `OTP for verification`,
+      text: message,
+    });
+  }
+
+  async optVerify(verifyOtpDto: VerifyOtpDto) {
+    const optGenerated = await this.cacheService.get(verifyOtpDto.email);
+
+    const user = await this.userRepository.findOne({
+      where: { email: verifyOtpDto.email },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    if (verifyOtpDto.otp !== optGenerated) {
+      throw new UnauthorizedException('otp incorrect');
+    }
+
+    const roleId = user?.userRoles[0].role.id;
+    const { accessToken, refereshToken } = await this.createToken(
+      user?.id.toString(),
+      roleId?.toString(),
+    );
+
+    return {
+      accessToken,
+      refereshToken,
+    };
+  }
+
+  async createToken(userId: string, roleId: string) {
+    const payload = {
+      userId,
+      roleId,
+    };
+
+    const [accessToken, refereshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<number>('ACCESS_TOKEN_EXPIRE'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<number>(
+          'REFRESH_TOKEN_EXPIRE',
+        ),
+      }),
+    ]);
+
+    return {
+      accessToken,
+      refereshToken,
+    };
   }
 }
