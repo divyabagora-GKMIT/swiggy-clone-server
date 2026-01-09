@@ -11,8 +11,7 @@ import {
   OneToOne,
 } from 'typeorm';
 import { User } from './user.entity';
-import { CartItem } from './cartItems.entity';
-
+import { CartItem } from './cart-items.entity';
 
 @Entity('cart')
 export class Cart {

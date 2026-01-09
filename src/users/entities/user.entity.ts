@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserRole } from './user_role.entity';
+import { UserRole } from './user-role.entity';
 import { Address } from 'src/users/entities/address.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { Order } from 'src/orders/entites/order.entity';
@@ -49,9 +49,8 @@ export class User {
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
-  @OneToMany(()=> Rating , rating => rating.user)
-  ratings : Rating[]
-
+  @OneToMany(() => Rating, (rating) => rating.user)
+  ratings: Rating[];
 
   @CreateDateColumn({
     name: 'created_at',

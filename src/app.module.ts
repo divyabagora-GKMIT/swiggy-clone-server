@@ -10,7 +10,7 @@ import { CountriesModule } from './countries/countries.module';
 import { StatesModule } from './states/states.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { User } from './users/entities/user.entity';
-import { UserRole } from './users/entities/user_role.entity';
+import { UserRole } from './users/entities/user-role.entity';
 import { Role } from './roles/entities/role.entity';
 import { Country } from './countries/entities/country.entity';
 import { State } from './states/entities/state.entity';
@@ -25,13 +25,21 @@ import { Order } from './orders/entites/order.entity';
 import { RatingsModule } from './ratings/ratings.module';
 import { Rating } from './ratings/entities/rating.entity';
 import { Cart } from './users/entities/cart.entity';
-import { CartItem } from './users/entities/cartItems.entity';
+import { CartItem } from './users/entities/cart-items.entity';
 import { Transaction } from './transactions/entities/transaction.entity';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { OrderItem } from './order-items/entities/order-items.entity';
+import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { HealthModule } from './health/health.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
+    CacheModule.register({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true
+    }),
     UsersModule,
     RolesModule,
     CitiesModule,
@@ -65,7 +73,6 @@ import { OrderItem } from './order-items/entities/order-items.entity';
           Transaction,
           OrderItem,
         ],
-        // autoLoadEntities: true,
       }),
     }),
     OrdersModule,
@@ -73,6 +80,20 @@ import { OrderItem } from './order-items/entities/order-items.entity';
     ItemsModule,
     RatingsModule,
     OrderItemsModule,
+    AuthModule,
+    HealthModule,
+
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'divybagora1122@gmail.com',
+          pass: 'jlimxhakmtbmtkms',
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
