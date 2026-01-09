@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { RestaurantsService } from './restaurants.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
-import { get } from 'http';
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -24,5 +23,10 @@ export class RestaurantsController {
     @Query('limit') limit: number = 10,
   ) {
     return this.restaurantService.viewRestaurants(page,limit);
+  }
+
+  @Get(':id')
+  async viewRestaurantItems(@Param('id') id : number){
+    return this.restaurantService.viewRestaurantItems(id);
   }
 }
