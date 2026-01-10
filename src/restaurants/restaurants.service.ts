@@ -16,11 +16,11 @@ export class RestaurantsService {
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
   ) {}
-  async createRestaurant(createRestaurantDto: CreateRestaurantDto) {
-    const { userId, cityId, ...rest } = createRestaurantDto;
-
-    const city = await this.cityRepository.findOneBy({
-      id: cityId,
+  async createRestaurant(userId: number , createRestaurantDto: CreateRestaurantDto) {
+    const {  cityId, ...rest } = createRestaurantDto;
+    console.log(cityId);
+    const city = await this.cityRepository.findOne({
+      where: {id: +cityId},
     });
 
     if (!city) {
@@ -29,7 +29,7 @@ export class RestaurantsService {
     const createdRestaurant = this.restaurantRepository.create({
       ...rest,
       user: { id: userId },
-      city,
+      city: {id: cityId},
     });
     return await this.restaurantRepository.save(createdRestaurant);
   }

@@ -11,9 +11,6 @@ import { RestaurantClassification } from '../entities/restaurant.entity';
 
 export class CreateRestaurantDto {
   @IsInt()
-  userId: number;
-
-  @IsInt()
   cityId: number;
 
   @IsString()

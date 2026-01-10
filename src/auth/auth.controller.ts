@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { RegisterUserDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -18,20 +18,22 @@ export class AuthController {
   }
 
   @Post('login')
-  async loginUser (@Body() loginDto: LoginDto){
-    const result  = await this.authService.loginUser(loginDto);
+  async loginUser(@Body() loginDto: LoginDto) {
+    const result = await this.authService.loginUser(loginDto);
     return {
-        message: "Otp Sent successfully"
-    }
+      message: 'Otp Sent successfully',
+    };
   }
 
   @Post('verify')
-  async optVerify (@Body() verifyOtpDto:VerifyOtpDto){
-    const {accessToken, refereshToken} =await this.authService.optVerify(verifyOtpDto);
+  async optVerify(@Body() verifyOtpDto: VerifyOtpDto, @Req() req) {
+    const { accessToken, refereshToken } =
+      await this.authService.optVerify(verifyOtpDto);
+
     return {
-        message: "Log in Successfully",
-        accessToken,
-        refereshToken
-    }
+      message: 'Log in Successfully',
+      accessToken,
+      refereshToken,
+    };
   }
 }
