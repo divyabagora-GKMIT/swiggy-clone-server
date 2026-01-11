@@ -12,12 +12,11 @@ import {
   OneToOne,
   OneToMany,
 } from 'typeorm';
-import { Rating } from 'src/ratings/entities/rating.entity';
-import { OrderItem } from 'src/order-items/entities/order-items.entity';
+import { OrderItem } from 'src/orders/entites/order-items.entity';
 
 export enum OrderStatus {
   PREPARING = 'Preparing',
-  ASSIGNED = 'Assigned',
+  ASSINGED = 'Assigned',
   DELIVERED = 'Delivered',
   CANCELLED = 'Cancelled',
 }
@@ -59,7 +58,7 @@ export class Order {
     type: 'float',
     nullable: false,
   })
-  GST: number;
+  gst: number;
 
   @Column({
     type: 'float',
