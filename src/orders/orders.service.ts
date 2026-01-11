@@ -1,18 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';  
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Order, OrderStatus } from './entites/order.entity';
 import { Cart } from 'src/cart/entities/cart.entity';
 import { CartItem } from 'src/cart/entities/cart-items.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Address } from 'src/users/entities/address.entity';
 import { OrderItem } from './entites/order-items.entity';
+import {
+  PaymentMode,
+  PaymentType,
+  Transaction,
+  TransactionStatus,
+} from './entites/transaction.entity';
+import { create } from 'domain';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
+
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
@@ -62,7 +75,7 @@ export class OrdersService {
 
       const order = orderRepository.create({
         user: { id: userId },
-        status: OrderStatus.UNASSIGNED,
+        status: OrderStatus.ASSINGED,
         restaurant: { id: restaurantId },
         total_amount: subTotal,
         gst: subTotal * 0.05,
@@ -84,10 +97,36 @@ export class OrdersService {
 
       await orderItemRepository.save(orderItems);
 
-      await cartItemRepository.softDelete({ cart: { id: cart.id } });
-      await cartRepository.softRemove(cart);
-
       return savedOrder;
+    });
+  }
+
+  async createTransaction(userId: number, orderId: number) {
+    return this.dataSource.transaction(async (manager) => {
+      const transactionRepo = manager.getRepository(Transaction);
+      const cartRepo = manager.getRepository(Cart);
+      const cartItemRepo = manager.getRepository(CartItem);
+
+      const createdTransaction = transactionRepo.create({
+        order: { id: orderId },
+        status: TransactionStatus.SUCCESS,
+        payment_mode: PaymentMode.PREPAID,
+        payment_type: PaymentType.UPI,
+      });
+
+      await transactionRepo.save(createdTransaction);
+
+
+      const cart = await cartRepo.findOne({
+        where: { user: { id: userId } },
+      });
+
+      if (cart) {
+        await cartItemRepo.softDelete({ cart: { id: cart.id } });
+        await cartRepo.softRemove(cart);
+      }
+    
+      return true;
     });
   }
 }

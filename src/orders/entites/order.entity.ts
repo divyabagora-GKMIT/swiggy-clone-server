@@ -12,12 +12,11 @@ import {
   OneToOne,
   OneToMany,
 } from 'typeorm';
-import { Rating } from 'src/ratings/entities/rating.entity';
 import { OrderItem } from 'src/orders/entites/order-items.entity';
 
 export enum OrderStatus {
   PREPARING = 'Preparing',
-  UNASSIGNED = 'Unassigned',
+  ASSINGED = 'Assigned',
   DELIVERED = 'Delivered',
   CANCELLED = 'Cancelled',
 }

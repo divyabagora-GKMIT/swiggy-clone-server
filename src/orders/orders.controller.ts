@@ -1,7 +1,8 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('orders')
 export class OrdersController {
@@ -19,4 +20,16 @@ export class OrdersController {
             data : result
         }
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/transactions')
+    @HttpCode(200)
+    async createTransaction (@Param('id') id : number, @Req() req){
+        const userId = req.user.userId; 
+        await this.ordersService.createTransaction(+userId, id);
+        return {
+            message : "Order has been placed successfully"
+        }
+    }
+
 }

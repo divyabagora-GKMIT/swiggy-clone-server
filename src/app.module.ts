@@ -25,7 +25,7 @@ import { Order } from './orders/entites/order.entity';
 import { RatingsModule } from './ratings/ratings.module';
 import { Rating } from './ratings/entities/rating.entity';
 
-import { Transaction } from './transactions/entities/transaction.entity';
+import { Transaction } from './orders/entites/transaction.entity';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { OrderItem } from './orders/entites/order-items.entity';
 import { AuthModule } from './auth/auth.module';
