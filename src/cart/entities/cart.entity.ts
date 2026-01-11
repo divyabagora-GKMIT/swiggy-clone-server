@@ -19,9 +19,6 @@ export class Cart {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  user_id: number;
-
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

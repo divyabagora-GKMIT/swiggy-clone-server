@@ -1,7 +1,6 @@
+import { CartItem } from 'src/cart/entities/cart-items.entity';
 import { Rating } from 'src/ratings/entities/rating.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
-import { Cart } from 'src/users/entities/cart.entity';
-import { CartItem } from 'src/users/entities/cart-items.entity';
 import {
   Column,
   Entity,
