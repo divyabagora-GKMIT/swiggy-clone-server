@@ -24,8 +24,7 @@ import { Item } from './items/entities/item.entity';
 import { Order } from './orders/entites/order.entity';
 import { RatingsModule } from './ratings/ratings.module';
 import { Rating } from './ratings/entities/rating.entity';
-import { Cart } from './users/entities/cart.entity';
-import { CartItem } from './users/entities/cart-items.entity';
+
 import { Transaction } from './transactions/entities/transaction.entity';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { OrderItem } from './order-items/entities/order-items.entity';
@@ -33,6 +32,9 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { HealthModule } from './health/health.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { CartModule } from './cart/cart.module';
+import { CartItem } from './cart/entities/cart-items.entity';
+import { Cart } from './cart/entities/cart.entity';
 
 @Module({
   imports: [
@@ -82,6 +84,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     OrderItemsModule,
     AuthModule,
     HealthModule,
+    CartModule,
 
     MailerModule.forRoot({
       transport: {
