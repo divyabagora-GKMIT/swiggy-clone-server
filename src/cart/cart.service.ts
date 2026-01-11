@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -49,14 +50,24 @@ export class CartService {
       },
     });
 
-    if (cartItem) {
-      cartItem.quantity += addCartItemDto?.quantity;
-    } else {
-      cartItem = this.cartItemRepository.create({
-        cart,
-        item: { id: addCartItemDto?.itemId },
-        quantity: addCartItemDto?.quantity,
+    if (!cartItem) {
+      const itemCount = await this.cartItemRepository.count({
+        where: { cart: { id: cart.id } },
       });
+
+      if (itemCount >= 5) {
+        throw new BadRequestException(
+          'Cart limit reached. You cannot add more than 5 distinct items.',
+        );
+      }
+
+      cartItem = this.cartItemRepository.create({
+        cart: cart,
+        item: { id: addCartItemDto.itemId },
+        quantity: addCartItemDto.quantity,
+      });
+    } else {
+      cartItem.quantity += addCartItemDto.quantity;
     }
 
     return await this.cartItemRepository.save(cartItem);
