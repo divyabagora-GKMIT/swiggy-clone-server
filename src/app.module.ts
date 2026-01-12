@@ -35,6 +35,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { CartModule } from './cart/cart.module';
 import { CartItem } from './cart/entities/cart-items.entity';
 import { Cart } from './cart/entities/cart.entity';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { Cart } from './cart/entities/cart.entity';
     AuthModule,
     HealthModule,
     CartModule,
+    MediaModule,
 
     MailerModule.forRoot({
       transport: {
