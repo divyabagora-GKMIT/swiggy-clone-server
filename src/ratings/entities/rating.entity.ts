@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToOne,
 } from 'typeorm';
 import { Order } from 'src/orders/entites/order.entity';
 
@@ -39,6 +40,10 @@ export class Rating {
   @JoinColumn({ name: 'restaurant_id' })
   restaurant: Restaurant;
 
+  @OneToOne(() => Order)
+  @JoinColumn({name : 'order_id'})
+  order : Order
+
   @Column({
     type: 'float',
     nullable: false,
@@ -58,6 +63,6 @@ export class Rating {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at' })
+  @DeleteDateColumn({ name: 'deleted_at' , select: false})
   deletedAt: Date;
 }
