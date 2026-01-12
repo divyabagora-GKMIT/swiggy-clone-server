@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Order, OrderStatus } from './entites/order.entity';
@@ -14,6 +14,7 @@ import {
   TransactionStatus,
 } from './entites/transaction.entity';
 import { create } from 'domain';
+import { UpdateOrderStatusDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -72,14 +73,15 @@ export class OrdersService {
           'Selected address not found or does not belong to you',
         );
       }
-
+      const gst = subTotal * 0.05;
+      const delivery_charge = 30;
       const order = orderRepository.create({
         user: { id: userId },
-        status: OrderStatus.ASSINGED,
+        status: OrderStatus.UNASSINGED,
         restaurant: { id: restaurantId },
-        total_amount: subTotal,
-        gst: subTotal * 0.05,
-        delivery_charge: 30,
+        gst,
+        delivery_charge,
+        total_amount: subTotal + gst + delivery_charge,
         address: `${deliveryAddress.address} ${deliveryAddress.pincode}`,
       });
 
@@ -116,7 +118,6 @@ export class OrdersService {
 
       await transactionRepo.save(createdTransaction);
 
-
       const cart = await cartRepo.findOne({
         where: { user: { id: userId } },
       });
@@ -125,8 +126,38 @@ export class OrdersService {
         await cartItemRepo.softDelete({ cart: { id: cart.id } });
         await cartRepo.softRemove(cart);
       }
-    
+
       return true;
     });
+  }
+
+  async getUnassignedOrders(status: string) {
+    if (!status) {
+      throw new BadRequestException('status is required');
+    }
+
+    const enumStatus = status.toUpperCase() as OrderStatus;
+
+    if (!Object.values(OrderStatus).includes(enumStatus)) {
+      throw new BadRequestException(
+        'Invalid status.',
+      );
+    }
+
+    return this.orderRepository.find({
+      where: { status: enumStatus },
+    });
+  }
+
+  async updateOrderStatus(orderId : number, updateOrderStatusDto : UpdateOrderStatusDto){
+    const order = await this.orderRepository.findOne({
+        where: {id : orderId}
+    })
+    if (!order) {
+        throw new NotFoundException('Order not exist')
+    }
+
+    const updatedOrder = this.orderRepository.merge(order,updateOrderStatusDto);
+    return await this.orderRepository.save(updatedOrder);
   }
 }

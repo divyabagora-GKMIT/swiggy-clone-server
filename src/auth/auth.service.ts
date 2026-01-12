@@ -91,7 +91,7 @@ export class AuthService {
     );
 
     const message = otp;
-    await this.mailService.sendMail({
+    this.mailService.sendMail({
       from: 'divybagora1122@gmail.com',
       to: loginDto.email,
       subject: `OTP for verification`,

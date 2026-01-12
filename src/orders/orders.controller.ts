@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from 'src/users/entities/user.entity';
+import { UpdateOrderStatusDto } from './dto/update-order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -32,4 +33,26 @@ export class OrdersController {
         }
     }
 
+    @Get()
+    async getUnassignedOrders (@Query('status') status : string){
+        const orders = await this.ordersService.getUnassignedOrders(status);
+        if (!orders.length){
+            return {
+                message : "No orders Available"
+            }
+        }
+        return {
+            message : "Orders fetch successfully",
+            data: orders
+        }
+    }   
+
+    @Patch(':id')
+    async updateOrderStatus (@Param('id') id : string, @Body()updateOrderStatusDto : UpdateOrderStatusDto){
+        const result = await this.ordersService.updateOrderStatus(+id, updateOrderStatusDto);
+
+        return {
+            message : "Status Updated successfully"
+        }
+    }
 }

@@ -32,7 +32,7 @@ export class Orders1767803690524 implements MigrationInterface {
               {
                 name: 'status',
                 type: 'enum',
-                enum: ['Preparing', 'Assigned', 'Delivered', 'Cancelled'],
+                enum: ['PREPARING', 'UNASSIGNED', 'DELIVERED', 'CANCELLED'],
                 enumName: 'order_status_enum',
                 isNullable: false,
               },

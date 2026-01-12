@@ -15,10 +15,10 @@ import {
 import { OrderItem } from 'src/orders/entites/order-items.entity';
 
 export enum OrderStatus {
-  PREPARING = 'Preparing',
-  ASSINGED = 'Assigned',
-  DELIVERED = 'Delivered',
-  CANCELLED = 'Cancelled',
+  PREPARING = 'PREPARING',
+  UNASSINGED = 'UNASSIGNED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
 }
 
 @Entity('orders')
