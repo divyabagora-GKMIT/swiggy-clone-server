@@ -1,9 +1,14 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Item } from './entities/item.entity';
 import { Repository } from 'typeorm';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { UpdateItemDto } from './dto/update-item.dto';
 
 @Injectable()
 export class ItemsService {
@@ -12,18 +17,18 @@ export class ItemsService {
     private readonly itemRepository: Repository<Item>,
 
     @InjectRepository(Restaurant)
-    private readonly restaurantRepository: Repository<Restaurant>
+    private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
 
   async addItem(createItemDto: CreateItemDto) {
     const { restaurantId, name, ...rest } = createItemDto;
 
     const restaurant = await this.restaurantRepository.findOne({
-        where: {id :restaurantId }
-    })
-    console.log(restaurant)
-    if (!restaurant){
-        throw new NotFoundException('Restaurant not found');
+      where: { id: restaurantId },
+    });
+    console.log(restaurant);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
     }
     const lowerCaseName = createItemDto.name.toLowerCase().trim();
     const existingItem = await this.itemRepository.findOne({
@@ -47,5 +52,18 @@ export class ItemsService {
     });
 
     return await this.itemRepository.save(newItem);
+  }
+
+  async updateItem(updateItemDto: UpdateItemDto, itemId: number) {
+    const item = await this.itemRepository.findOne({
+      where: { id: itemId },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Item not found');
+    }
+    const updatedItem = this.itemRepository.merge(item, updateItemDto);
+
+    return await this.itemRepository.save(updatedItem);
   }
 }

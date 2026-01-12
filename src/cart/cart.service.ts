@@ -38,7 +38,7 @@ export class CartService {
     let cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
     });
-
+    console.log(cart);
     if (!cart) {
       cart = await this.createCart(userId);
     }
