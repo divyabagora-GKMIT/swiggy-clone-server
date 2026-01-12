@@ -17,7 +17,6 @@ export class Cart1767803659425 implements MigrationInterface {
             name: 'user_id',
             type: 'int',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'created_at',

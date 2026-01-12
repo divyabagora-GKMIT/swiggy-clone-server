@@ -1,7 +1,9 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemsService } from './items.service';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { get } from 'http';
+import { BADFAMILY } from 'dns';
 
 @Controller('items')
 export class ItemsController {
@@ -27,4 +29,21 @@ export class ItemsController {
             data : result
         }
     }
+
+    @Get()
+    async getItems (@Query('name') name : string){
+        const items = await this.itemsService.getItems(name);
+
+        if (!items.length){
+            return {
+                message : "No Items found for this name"
+            }
+        }
+
+        return {
+            message : "Items fetch successfully",
+            data: items
+        }
+    }
+
 }

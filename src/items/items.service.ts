@@ -62,8 +62,22 @@ export class ItemsService {
     if (!item) {
       throw new NotFoundException('Item not found');
     }
+
+    if (updateItemDto.name) {
+      updateItemDto.name = updateItemDto.name.toLowerCase().trim();
+    }
+
     const updatedItem = this.itemRepository.merge(item, updateItemDto);
 
-    return await this.itemRepository.save(updatedItem);
+    return this.itemRepository.save(updatedItem);
+  }
+
+  async getItems(name: string) {
+    const lowerCaseName = name.toLowerCase();
+    const items = await this.itemRepository.find({
+      where: { name: lowerCaseName },
+    });
+
+    return items;
   }
 }
