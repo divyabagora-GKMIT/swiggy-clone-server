@@ -1,4 +1,4 @@
-import multerS3 from 'multer-s3';
+import multerS3 from 'multer-s3-v3';
 import { v4 as uuid } from 'uuid';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { s3 } from './s3.config';

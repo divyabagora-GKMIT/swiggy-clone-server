@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import {  Req, Res } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 @Injectable()
@@ -7,7 +7,8 @@ export class MediaService {
   private readonly s3: AWS.S3;
   private readonly AWS_S3_BUCKET: string;
   constructor(private readonly configService: ConfigService) {
-    this.AWS_S3_BUCKET = this.configService.getOrThrow<string>('S3_BUCKET_NAME');
+    this.AWS_S3_BUCKET =
+      this.configService.getOrThrow<string>('S3_BUCKET_NAME');
     this.s3 = new AWS.S3({
       accessKeyId: this.configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
       secretAccessKey: this.configService.getOrThrow<string>(

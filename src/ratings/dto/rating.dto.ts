@@ -17,9 +17,6 @@ export class RateItemDto {
   @Min(1)
   rating: number;
 
-  @IsOptional()
-  @IsString()
-  comment?: string;
 }
 
 export class CreateOrderRatingDto {

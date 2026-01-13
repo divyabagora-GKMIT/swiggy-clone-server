@@ -72,6 +72,20 @@ export class AuthService {
     });
 
     await this.userRoleRepository.save(userRole);
+    const otp = randomInt(1000, 9999).toString();
+    await this.cacheService.set(
+      registerUserDto.email,
+      otp.toString(),
+      this.configService.get<number>('CACHE_TTL'),
+    );
+
+    const message = `Verification Code : ${otp}`;
+    this.mailService.sendMail({
+      from: 'divybagora1122@gmail.com',
+      to: registerUserDto.email,
+      subject: `OTP for verification`,
+      text: message,
+    });
   }
 
   async loginUser(loginDto: LoginDto): Promise<void> {
@@ -90,7 +104,7 @@ export class AuthService {
       this.configService.get<number>('CACHE_TTL'),
     );
 
-    const message = otp;
+    const message = `Verification Code : ${otp}`;
     this.mailService.sendMail({
       from: 'divybagora1122@gmail.com',
       to: loginDto.email,

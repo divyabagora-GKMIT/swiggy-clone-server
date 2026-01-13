@@ -1,5 +1,5 @@
 import {
-    BadRequestException,
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -10,6 +10,7 @@ import { Cart } from './entities/cart.entity';
 import { AddCartItemDto } from './dto/add-item.dto';
 import { CartItem } from './entities/cart-items.entity';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { Item } from 'src/items/entities/item.entity';
 
 @Injectable()
 export class CartService {
@@ -19,6 +20,9 @@ export class CartService {
 
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+
+    @InjectRepository(Item)
+    private readonly itemRepository : Repository<Item>
   ) {}
 
   async createCart(userId: number) {
@@ -35,10 +39,17 @@ export class CartService {
   }
 
   async addItemToCart(addCartItemDto: AddCartItemDto, userId: number) {
+    const item = await this.itemRepository.findOne({
+      where: { id: addCartItemDto.itemId },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Item does not exist');
+    }
     let cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
     });
-    console.log(cart);
+
     if (!cart) {
       cart = await this.createCart(userId);
     }
@@ -82,9 +93,13 @@ export class CartService {
       where: { user: { id: userId } },
     });
 
+    if (!cart){
+      throw new NotFoundException('Your cart has been deleted')
+    }
+
     const cartItem = await this.cartItemRepository.findOne({
       where: {
-        cart: { id: cart?.id },
+        cart: { id: cart.id },
         item: { id: itemId },
       },
     });

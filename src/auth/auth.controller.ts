@@ -12,7 +12,7 @@ export class AuthController {
   async createUser(@Body() registerUserDto: RegisterUserDto) {
     const result = await this.authService.createUser(registerUserDto);
     return {
-      message: 'User Created Successfully',
+      message: 'otp sent Successfully',
       data: result,
     };
   }

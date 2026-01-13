@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -23,8 +24,10 @@ export class RestaurantsController {
     @Req() req,
   ) {
     const userId = req.user.userId;
-    const result =
-      await this.restaurantService.createRestaurant(+userId, createRestaurantDto);
+    const result = await this.restaurantService.createRestaurant(
+      +userId,
+      createRestaurantDto,
+    );
 
     return {
       message: 'Restaurant Added Successfully',
@@ -34,14 +37,21 @@ export class RestaurantsController {
 
   @Get()
   async viewRestaurants(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('name') name: string,
   ) {
-    return this.restaurantService.viewRestaurants(page, limit);
+    return this.restaurantService.viewRestaurants(+page, +limit, name);
   }
 
   @Get(':id')
-  async viewRestaurantItems(@Param('id') id: number) {
-    return this.restaurantService.viewRestaurantItems(id);
+  async viewRestaurantItems(
+    @Param('id', new ParseIntPipe()) id: number,
+    @Query('page') page: string ,
+    @Query('limit') limit: string ,
+    @Query('name') name: string ,
+    @Query('order') order:string 
+  ) {
+    return this.restaurantService.viewRestaurantItems(id,+page,+limit,name,order);
   }
 }

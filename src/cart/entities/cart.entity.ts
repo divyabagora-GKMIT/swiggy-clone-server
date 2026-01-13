@@ -32,6 +32,6 @@ export class Cart {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true , select:false})
   deleted_at: Date | null;
 }

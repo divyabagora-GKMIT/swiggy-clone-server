@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   UploadedFiles,
@@ -14,7 +15,7 @@ import { MediaService } from './media.service';
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @Post()
+  @Post('uploads')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'item', maxCount: 1 },
@@ -28,7 +29,12 @@ export class MediaController {
       restaurant?: Express.Multer.File[];
     },
   ) {
-    const itemFile = files.item?.[0]; 
+    if (!files?.item?.length && !files?.restaurant?.length) {
+      throw new BadRequestException(
+        'At least one file (item or restaurant) must be provided',
+      );
+    }
+    const itemFile = files.item?.[0];
     const restaurantFile = files.restaurant?.[0];
 
     const itemUpload = itemFile
@@ -40,8 +46,9 @@ export class MediaController {
       : null;
 
     return {
-      item: itemUpload,
-      restaurant: restaurantUpload,
+      message : "File uploaded successfully",
+      item: itemUpload?.Location,
+      restaurant: restaurantUpload?.Location,
     };
   }
 }

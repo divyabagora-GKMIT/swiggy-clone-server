@@ -1,12 +1,13 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Item } from './entities/item.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { UpdateItemDto } from './dto/update-item.dto';
 
@@ -20,16 +21,23 @@ export class ItemsService {
     private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
 
-  async addItem(createItemDto: CreateItemDto) {
+  async addItem(createItemDto: CreateItemDto, userId: number) {
     const { restaurantId, name, ...rest } = createItemDto;
 
     const restaurant = await this.restaurantRepository.findOne({
       where: { id: restaurantId },
+      relations: ['user'],
     });
-    console.log(restaurant);
     if (!restaurant) {
       throw new NotFoundException('Restaurant not found');
     }
+
+    if (restaurant.user.id !== userId) {
+      throw new ForbiddenException(
+        'You are not allowed to add item in this restaurant',
+      );
+    }
+
     const lowerCaseName = createItemDto.name.toLowerCase().trim();
     const existingItem = await this.itemRepository.findOne({
       where: {
@@ -43,7 +51,6 @@ export class ItemsService {
         `An item with the name "${name}" already exists in this restaurant.`,
       );
     }
-    console.log(lowerCaseName);
 
     const newItem = this.itemRepository.create({
       ...rest,
@@ -54,13 +61,29 @@ export class ItemsService {
     return await this.itemRepository.save(newItem);
   }
 
-  async updateItem(updateItemDto: UpdateItemDto, itemId: number) {
+  async updateItem(
+    updateItemDto: UpdateItemDto,
+    itemId: number,
+    userId: number,
+  ) {
     const item = await this.itemRepository.findOne({
       where: { id: itemId },
+      relations: ['restaurant']
     });
 
     if (!item) {
       throw new NotFoundException('Item not found');
+    }
+
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id: item.restaurant.id },
+      relations: ['user'],
+    });
+
+    if (restaurant?.user.id !== userId) {
+      throw new ForbiddenException(
+        'You are not allowed to add item in this restaurant',
+      );
     }
 
     if (updateItemDto.name) {
@@ -73,9 +96,9 @@ export class ItemsService {
   }
 
   async getItems(name: string) {
-    const lowerCaseName = name.toLowerCase();
+    const where = { name: ILike(`%${name}%`) };
     const items = await this.itemRepository.find({
-      where: { name: lowerCaseName },
+      where,
     });
 
     return items;

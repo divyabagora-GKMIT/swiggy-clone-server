@@ -35,39 +35,76 @@ export class RatingsService {
     const orderItemsIds = order.orderItems.map((oi) => oi.item.id);
     console.log(orderItemsIds);
 
-    if (!createOrderRatingDto.ratings) {
-      for (const orderItem of order.orderItems) {
-        console.log(orderItem);
-        ratingsToSave.push(
-          this.ratingRepository.create({
-            user: { id: userId },
-            order: { id: order.id },
-            restaurant: { id: order.restaurant.id },
-            item: { id: orderItem.item.id },
-            rating: createOrderRatingDto.rating,
-            comment: createOrderRatingDto?.comment,
-          }),
-        );
-      }
-    } else {
+    //   for (const orderItem of order.orderItems) {
+    //     console.log(orderItem);
+    //     ratingsToSave.push(
+    //       this.ratingRepository.create({
+    //         user: { id: userId },
+    //         order: { id: order.id },
+    //         restaurant: { id: order.restaurant.id },
+    //         item: { id: orderItem.item.id },
+    //         rating: createOrderRatingDto.rating,
+    //         comment: createOrderRatingDto?.comment,
+    //       }),
+    //     );
+    // }
+
+    // console.log(ratingsToSave);
+    // if(createOrderRatingDto.ratings) {
+    //   for (const r of createOrderRatingDto.ratings) {
+    //     if (!orderItemsIds.includes(r.itemId)) {
+    //       throw new BadRequestException(`Item ${r.itemId} not in this order`);
+    //     }
+
+    //     ratingsToSave.push(
+    //       this.ratingRepository.create({
+    //         user: { id: userId },
+    //         order: { id: order.id },
+    //         restaurant: { id: order.restaurant.id },
+    //         item: { id: r.itemId },
+    //         rating: r.rating,
+    //         comment: r.comment,
+    //       }),
+    //     );
+    //   }
+    // }
+    const ratingsMap = new Map<number, Rating>();
+
+    for (const orderItem of order.orderItems) {
+      ratingsMap.set(
+        orderItem.item.id,
+        this.ratingRepository.create({
+          user: { id: userId },
+          order: { id: order.id },
+          restaurant: { id: order.restaurant.id },
+          item: { id: orderItem.item.id },
+          rating: createOrderRatingDto.rating,
+          comment: createOrderRatingDto?.comment,
+        }),
+      );
+    }
+
+    if (createOrderRatingDto.ratings) {
       for (const r of createOrderRatingDto.ratings) {
         if (!orderItemsIds.includes(r.itemId)) {
           throw new BadRequestException(`Item ${r.itemId} not in this order`);
         }
 
-        ratingsToSave.push(
+        ratingsMap.set(
+          r.itemId,
           this.ratingRepository.create({
             user: { id: userId },
             order: { id: order.id },
             restaurant: { id: order.restaurant.id },
             item: { id: r.itemId },
             rating: r.rating,
-            comment: r.comment,
           }),
         );
       }
     }
 
-    await this.ratingRepository.save(ratingsToSave);
+    await this.ratingRepository.save([...ratingsMap.values()]);
+
+    // await this.ratingRepository.save(ratingsToSave);
   }
 }

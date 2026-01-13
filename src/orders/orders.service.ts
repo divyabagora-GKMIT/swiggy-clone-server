@@ -160,4 +160,11 @@ export class OrdersService {
     const updatedOrder = this.orderRepository.merge(order,updateOrderStatusDto);
     return await this.orderRepository.save(updatedOrder);
   }
+
+  async viewMyOrders(userId : number){
+    const orders = await this.orderRepository.find({
+      where : {user :{id : userId}}
+    })
+    return orders;
+  }
 }

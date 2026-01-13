@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  HttpCode,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -12,7 +14,7 @@ import { CartService } from './cart.service';
 import { AddCartItemDto } from './dto/add-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
-@Controller('cart')
+@Controller('carts')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
@@ -27,7 +29,8 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('add')
+  @Post('items')
+  @HttpCode(200)
   async addItemToCart(@Body() addCartItemDto: AddCartItemDto, @Req() req) {
     const userId = req.user.userId;
     const result = await this.cartService.addItemToCart(addCartItemDto, +userId);
@@ -38,10 +41,10 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('item/:id')
+  @Patch('items/:id')
   async updateItemToCart(
     @Body() updateCartItemDto: UpdateCartItemDto,
-    @Param('id') id: number,
+    @Param('id',new ParseIntPipe()) id: number ,
     @Req() req 
   ) {
     const userId = req.user.userId;

@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemsService } from './items.service';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { get } from 'http';
-import { BADFAMILY } from 'dns';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('items')
 export class ItemsController {
@@ -11,9 +10,12 @@ export class ItemsController {
     constructor(
         private readonly itemsService: ItemsService
     ){}
+
+    @UseGuards(JwtAuthGuard)
     @Post()
-    async addItem(@Body() createItemDto: CreateItemDto){
-        const result = await this.itemsService.addItem(createItemDto);
+    async addItem(@Body() createItemDto: CreateItemDto, @Req() req){
+        const userId = req.user.userId
+        const result = await this.itemsService.addItem(createItemDto, +userId);
 
         return {
             message: "Item Added Successfully",
@@ -21,9 +23,11 @@ export class ItemsController {
         }
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':id')
-    async updateItem(@Body() updateItemDto: UpdateItemDto, @Param('id') id :string){
-        const result = await this.itemsService.updateItem(updateItemDto, +id);
+    async updateItem(@Body() updateItemDto: UpdateItemDto, @Param('id' ,new ParseIntPipe()) id :string, @Req() req){
+        const userId = req.user.userId;
+        const result = await this.itemsService.updateItem(updateItemDto, +id, +userId);
         return {
             message : "Item details updated successfully",
             data : result
