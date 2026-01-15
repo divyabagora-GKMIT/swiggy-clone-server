@@ -11,32 +11,33 @@ export class ItemsController {
         private readonly itemsService: ItemsService
     ){}
 
-    @UseGuards(JwtAuthGuard)
-    @Post()
-    async addItem(@Body() createItemDto: CreateItemDto, @Req() req){
-        const userId = req.user.userId
-        const result = await this.itemsService.addItem(createItemDto, +userId);
+    // @UseGuards(JwtAuthGuard)
+    // @Post()
+    // async addItem(@Body() createItemDto: CreateItemDto, @Req() req){
+    //     const userId = req.user.userId
+    //     const result = await this.itemsService.addItem(createItemDto, +userId);
 
-        return {
-            message: "Item Added Successfully",
-            data: result
-        }
-    }
+    //     return {
+    //         message: "Item Added Successfully",
+    //         data: result
+    //     }
+    // }
 
-    @UseGuards(JwtAuthGuard)
-    @Patch(':id')
-    async updateItem(@Body() updateItemDto: UpdateItemDto, @Param('id' ,new ParseIntPipe()) id :string, @Req() req){
-        const userId = req.user.userId;
-        const result = await this.itemsService.updateItem(updateItemDto, +id, +userId);
-        return {
-            message : "Item details updated successfully",
-            data : result
-        }
-    }
+    // @UseGuards(JwtAuthGuard)
+    // @Patch(':id')
+    // async updateItem(@Body() updateItemDto: UpdateItemDto, @Param('id' ,new ParseIntPipe()) id :string, @Req() req){
+    //     const userId = req.user.userId;
+    //     const result = await this.itemsService.updateItem(updateItemDto, +id, +userId);
+    //     return {
+    //         message : "Item details updated successfully",
+    //         data : result
+    //     }
+    // }
 
     @Get()
-    async getItems (@Query('name') name : string){
-        const items = await this.itemsService.getItems(name);
+    async getItems (@Query() query ){
+        const {name , city} =  query
+        const items = await this.itemsService.getItems(name, city);
 
         if (!items.length){
             return {

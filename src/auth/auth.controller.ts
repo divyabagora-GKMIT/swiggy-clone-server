@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { RegisterUserDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -19,7 +26,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  async loginUser(@Body() loginDto: LoginDto) {
+  async loginUser(@Body() loginDto: LoginDto): Promise<object> {
     const result = await this.authService.loginUser(loginDto);
     return {
       message: 'Otp Sent successfully',

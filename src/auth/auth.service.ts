@@ -1,7 +1,9 @@
 import {
   ConflictException,
+  HttpException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -19,7 +21,6 @@ import { VerifyOtpDto } from './dto/verifyOtp.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { config } from 'process';
 
 @Injectable()
 export class AuthService {
@@ -42,127 +43,158 @@ export class AuthService {
   ) {}
 
   async createUser(registerUserDto: RegisterUserDto): Promise<void> {
-    const userExist = await this.userRepository.findOne({
-      where: { email: registerUserDto.email },
-    });
+    try {
+      const userExist = await this.userRepository.findOne({
+        where: { email: registerUserDto.email },
+      });
 
-    if (userExist) {
-      throw new ConflictException('User already exists');
+      if (userExist) {
+        throw new ConflictException('User already exists');
+      }
+
+      const roleExist = await this.roleRepository.findOne({
+        where: { id: registerUserDto.roleId },
+      });
+
+      if (!roleExist) {
+        throw new NotFoundException('Role not exists');
+      }
+
+      const createdUser = this.userRepository.create({
+        name: registerUserDto.name,
+        email: registerUserDto.email,
+        phone: registerUserDto.phone,
+      });
+
+      await this.userRepository.save(createdUser);
+
+      const userRole = this.userRoleRepository.create({
+        user: createdUser,
+        role: roleExist!,
+      });
+
+      await this.userRoleRepository.save(userRole);
+
+      const otp = randomInt(1000, 9999).toString();
+      console.log(otp);
+      await this.cacheService.set(
+        registerUserDto.email,
+        otp.toString(),
+        this.configService.get<number>('CACHE_TTL'),
+      );
+
+      const message = `Verification Code : ${otp}`;
+      this.mailService.sendMail({
+        from: 'divybagora1122@gmail.com',
+        to: registerUserDto.email,
+        subject: `OTP for verification`,
+        text: message,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    const roleExist = await this.roleRepository.findOne({
-      where: { id: registerUserDto.roleId },
-    });
-
-    if (!roleExist) {
-      throw new NotFoundException('Role not exists');
-    }
-
-    const createdUser = this.userRepository.create({
-      name: registerUserDto.name,
-      email: registerUserDto.email,
-      phone: registerUserDto.phone,
-    });
-
-    await this.userRepository.save(createdUser);
-
-    const userRole = this.userRoleRepository.create({
-      user: createdUser,
-      role: roleExist,
-    });
-
-    await this.userRoleRepository.save(userRole);
-    const otp = randomInt(1000, 9999).toString();
-    await this.cacheService.set(
-      registerUserDto.email,
-      otp.toString(),
-      this.configService.get<number>('CACHE_TTL'),
-    );
-
-    const message = `Verification Code : ${otp}`;
-    this.mailService.sendMail({
-      from: 'divybagora1122@gmail.com',
-      to: registerUserDto.email,
-      subject: `OTP for verification`,
-      text: message,
-    });
   }
 
   async loginUser(loginDto: LoginDto): Promise<void> {
-    const userExist = await this.userRepository.findOne({
-      where: { email: loginDto.email },
-    });
+    try {
+      const userExist = await this.userRepository.findOne({
+        where: { email: loginDto.email },
+      });
 
-    if (!userExist) {
-      throw new NotFoundException('User not exist');
+      if (!userExist) {
+        throw new NotFoundException('User not exist');
+      }
+
+      const otp = randomInt(1000, 9999).toString();
+      const exp = this.configService.get<number>('CACHE_TTL');
+      console.log(otp);
+      await this.cacheService.set(loginDto.email, otp.toString(), +exp!);
+
+      const message = `Verification Code : ${otp}`;
+      this.mailService.sendMail({
+        from: 'divybagora1122@gmail.com',
+        to: loginDto.email,
+        subject: `OTP for verification`,
+        text: message,
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    const otp = randomInt(1000, 9999).toString();
-    await this.cacheService.set(
-      loginDto.email,
-      otp.toString(),
-      this.configService.get<number>('CACHE_TTL'),
-    );
-
-    const message = `Verification Code : ${otp}`;
-    this.mailService.sendMail({
-      from: 'divybagora1122@gmail.com',
-      to: loginDto.email,
-      subject: `OTP for verification`,
-      text: message,
-    });
   }
 
   async optVerify(verifyOtpDto: VerifyOtpDto) {
-    const optGenerated = await this.cacheService.get(verifyOtpDto.email);
+    try {
+      const optGenerated = await this.cacheService.get(verifyOtpDto.email);
 
-    const user = await this.userRepository.findOne({
-      where: { email: verifyOtpDto.email },
-      relations: ['userRoles', 'userRoles.role'],
-    });
+      const user = await this.userRepository.findOne({
+        where: { email: verifyOtpDto.email },
+        relations: ['userRoles', 'userRoles.role'],
+      });
 
-    if (!user) {
-      throw new NotFoundException();
+      if (!user) {
+        throw new NotFoundException();
+      }
+
+      if (verifyOtpDto.otp !== optGenerated) {
+        throw new UnauthorizedException('otp incorrect');
+      }
+
+      const roleId = user?.userRoles[0].role.id;
+      const { accessToken, refereshToken } = await this.createToken(
+        user?.id.toString(),
+        roleId?.toString(),
+      );
+
+      await this.cacheService.del(verifyOtpDto.email);
+      return {
+        accessToken,
+        refereshToken,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    if (verifyOtpDto.otp !== optGenerated) {
-      throw new UnauthorizedException('otp incorrect');
-    }
-
-    const roleId = user?.userRoles[0].role.id;
-    const { accessToken, refereshToken } = await this.createToken(
-      user?.id.toString(),
-      roleId?.toString(),
-    );
-
-    return {
-      accessToken,
-      refereshToken,
-    };
   }
 
   async createToken(userId: string, roleId: string) {
-    const payload = {
-      userId,
-      roleId,
-    };
+    try {
+      const payload = {
+        userId,
+        roleId,
+      };
 
-    const [accessToken, refereshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
-        expiresIn: this.configService.getOrThrow<number>('ACCESS_TOKEN_EXPIRE'),
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
-        expiresIn: this.configService.getOrThrow<number>(
-          'REFRESH_TOKEN_EXPIRE',
-        ),
-      }),
-    ]);
+      const [accessToken, refereshToken] = await Promise.all([
+        this.jwtService.signAsync(payload, {
+          secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
+          expiresIn: this.configService.getOrThrow<number>(
+            'ACCESS_TOKEN_EXPIRE',
+          ),
+        }),
+        this.jwtService.signAsync(payload, {
+          secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
+          expiresIn: this.configService.getOrThrow<number>(
+            'REFRESH_TOKEN_EXPIRE',
+          ),
+        }),
+      ]);
 
-    return {
-      accessToken,
-      refereshToken,
-    };
+      return {
+        accessToken,
+        refereshToken,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }

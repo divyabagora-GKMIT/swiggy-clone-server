@@ -33,7 +33,6 @@ export class RatingsService {
 
     const ratingsToSave: Rating[] = [];
     const orderItemsIds = order.orderItems.map((oi) => oi.item.id);
-    console.log(orderItemsIds);
 
     //   for (const orderItem of order.orderItems) {
     //     console.log(orderItem);

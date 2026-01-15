@@ -15,7 +15,7 @@ export class UsersController {
     async addAddress (@Body() createAddressDto: CreateAddressDto, @Req() req) {
         const userId = req.user.userId;
         console.log(userId)
-        const result = await  this.usersService.addAddress(createAddressDto,+userId);
+        const result = await this.usersService.addAddress(createAddressDto,+userId);
 
         return {
             message : "Address added successfully",
