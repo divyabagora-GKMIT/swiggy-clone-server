@@ -34,7 +34,7 @@ export class Address {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => City, (city) => city.addresses)
+  @ManyToOne(() => City)
   @JoinColumn({ name: 'city_id' })
   city: City;
 

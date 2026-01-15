@@ -30,8 +30,6 @@ export class City {
   @JoinColumn({ name: 'state_id' })
   state: State;
 
-  @ManyToOne(() => Address, (address) => address.city)
-  addresses: Address[];
 
   @OneToMany(() => Restaurant, restaurant => restaurant.city)
   restaurants: Restaurant[];

@@ -19,6 +19,7 @@ export enum OrderStatus {
   UNASSINGED = 'UNASSIGNED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
+  PENDING = 'PENDING'
 }
 
 @Entity('orders')

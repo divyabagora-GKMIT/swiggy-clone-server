@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, Param } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  Param,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Restaurant } from './entities/restaurant.entity';
 import { ILike, Repository } from 'typeorm';
@@ -11,7 +17,7 @@ export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurantRepository: Repository<Restaurant>,
-    @InjectRepository(Restaurant)
+    @InjectRepository(City)
     private readonly cityRepository: Repository<City>,
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
@@ -19,45 +25,81 @@ export class RestaurantsService {
   async createRestaurant(
     userId: number,
     createRestaurantDto: CreateRestaurantDto,
-  ) {
-    const { cityId, name, ...rest } = createRestaurantDto;
-    console.log(cityId);
-    const city = await this.cityRepository.findOne({
-      where: { id: +cityId },
-    });
-    console.log(city);
+  ): Promise<object> {
+    try {
+      const { cityId, name, ...rest } = createRestaurantDto;
+      const city = await this.cityRepository.findOne({
+        where: { id: +cityId },
+      });
 
-    if (!city) {
-      throw new NotFoundException('City not exist');
+      if (!city) {
+        throw new NotFoundException('City not exist');
+      }
+
+      const lowerCaseName = name.toLowerCase();
+      const createdRestaurant = this.restaurantRepository.create({
+        ...rest,
+        name: lowerCaseName,
+        user: { id: userId },
+        city: { id: cityId },
+      });
+      return await this.restaurantRepository.save(createdRestaurant);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-    const lowerCaseName  = name.toLowerCase();
-    const createdRestaurant = this.restaurantRepository.create({
-      ...rest,
-      name: lowerCaseName,
-      user: { id: userId },
-      city: { id: cityId },
-    });
-    return await this.restaurantRepository.save(createdRestaurant);
   }
 
-  async viewRestaurants(page: number = 1, limit: number = 10, name = '') {
-    const skip = (page - 1) * limit;
-    const where = name ? { name: ILike(`%${name}%`) } : {};
-    const [data, total] = await this.restaurantRepository.findAndCount({
-      where,
-      take: limit,
-      skip: skip,
-      order: {
-        id: 'DESC',
-      },
-    });
+  async viewRestaurants(
+    page: number = 1,
+    limit: number = 10,
+    name = '',
+    city = 'Udaipur',
+  ): Promise<object> {
+    try {
+      const skip = (page - 1) * limit;
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-    };
+      const where: any = {};
+      if (name) {
+        where.name = ILike(`%${name}%`);
+      }
+
+      if (city) {
+        where.city = {
+          name: ILike(`%${city}%`),
+        };
+      }
+
+      where: {
+        city: {
+          name: city;
+        }
+      }
+      const [data, total] = await this.restaurantRepository.findAndCount({
+        where,
+        take: limit,
+        skip: skip,
+        order: {
+          id: 'DESC',
+        },
+
+        relations: ['city'],
+      });
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async viewRestaurantItems(
@@ -66,41 +108,48 @@ export class RestaurantsService {
     limit: number = 10,
     name: string = '',
     orderBy: string = 'price',
-    sort: 'ASC' | 'DESC' = 'ASC',
-  ) {
-    const restaurant = await this.restaurantRepository.findOne({
-      where: { id: restaurantId },
-    });
-    if (!restaurant) {
-      throw new NotFoundException('Restaurant not found');
+    sort: 'ASC' | 'DESC' = 'DESC',
+  ): Promise<object> {
+    try {
+      const restaurant = await this.restaurantRepository.findOne({
+        where: { id: restaurantId },
+      });
+      if (!restaurant) {
+        throw new NotFoundException('Restaurant not found');
+      }
+
+      const skip = (page - 1) * limit;
+
+      const where: any = {
+        restaurant: { id: restaurantId },
+      };
+
+      if (name) {
+        where.name = ILike(`%${name}%`);
+      }
+      const [data, total] = await this.itemRepository.findAndCount({
+        where,
+        take: limit,
+        skip,
+        order: {
+          [orderBy]: sort,
+        },
+      });
+
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    const skip = (page - 1) * limit;
-
-    const where: any = {
-      restaurant: { id: restaurantId },
-    };
-
-    if (name) {
-      where.name = ILike(`%${name}%`);
-    }
-    const [data, total] = await this.itemRepository.findAndCount({
-      where,
-      take: limit,
-      skip,
-      order: {
-        [orderBy]: sort,
-      },
-    });
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
   }
 }

@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,66 +24,80 @@ export class CartService {
     private readonly cartItemRepository: Repository<CartItem>,
 
     @InjectRepository(Item)
-    private readonly itemRepository : Repository<Item>
+    private readonly itemRepository: Repository<Item>,
   ) {}
 
   async createCart(userId: number) {
-    const cartExist = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
-    });
+    try {
+      const cartExist = await this.cartRepository.findOne({
+        where: { user: { id: userId } },
+      });
 
-    if (cartExist) {
-      throw new ConflictException('User cart already exists');
+      if (cartExist) {
+        throw new ConflictException('User cart already exists');
+      }
+
+      const createCart = this.cartRepository.create({ user: { id: userId } });
+      return await this.cartRepository.save(createCart);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    const createCart = this.cartRepository.create({ user: { id: userId } });
-    return await this.cartRepository.save(createCart);
   }
 
   async addItemToCart(addCartItemDto: AddCartItemDto, userId: number) {
-    const item = await this.itemRepository.findOne({
-      where: { id: addCartItemDto.itemId },
-    });
-
-    if (!item) {
-      throw new NotFoundException('Item does not exist');
-    }
-    let cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
-    });
-
-    if (!cart) {
-      cart = await this.createCart(userId);
-    }
-
-    let cartItem = await this.cartItemRepository.findOne({
-      where: {
-        cart: { id: cart.id },
-        item: { id: addCartItemDto.itemId },
-      },
-    });
-
-    if (!cartItem) {
-      const itemCount = await this.cartItemRepository.count({
-        where: { cart: { id: cart.id } },
+    try {
+      const item = await this.itemRepository.findOne({
+        where: { id: addCartItemDto.itemId },
       });
 
-      if (itemCount >= 5) {
-        throw new BadRequestException(
-          'Cart limit reached. You cannot add more than 5 distinct items.',
-        );
+      if (!item) {
+        throw new NotFoundException('Item does not exist');
+      }
+      let cart = await this.cartRepository.findOne({
+        where: { user: { id: userId } },
+      });
+
+      if (!cart) {
+        cart = await this.createCart(userId);
       }
 
-      cartItem = this.cartItemRepository.create({
-        cart: cart,
-        item: { id: addCartItemDto.itemId },
-        quantity: addCartItemDto.quantity,
+      let cartItem = await this.cartItemRepository.findOne({
+        where: {
+          cart: { id: cart.id },
+          item: { id: addCartItemDto.itemId },
+        },
       });
-    } else {
-      cartItem.quantity += addCartItemDto.quantity;
-    }
 
-    return await this.cartItemRepository.save(cartItem);
+      if (!cartItem) {
+        const itemCount = await this.cartItemRepository.count({
+          where: { cart: { id: cart.id } },
+        });
+
+        if (itemCount >= 5) {
+          throw new BadRequestException(
+            'Cart limit reached. You cannot add more than 5 distinct items.',
+          );
+        }
+
+        cartItem = this.cartItemRepository.create({
+          cart: cart,
+          item: { id: addCartItemDto.itemId },
+          quantity: addCartItemDto.quantity,
+        });
+      } else {
+        cartItem.quantity += addCartItemDto.quantity;
+      }
+
+      return await this.cartItemRepository.save(cartItem);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async updateItemToCart(
@@ -89,26 +105,33 @@ export class CartService {
     userId: number,
     itemId: number,
   ) {
-    const cart = await this.cartRepository.findOne({
-      where: { user: { id: userId } },
-    });
+    try {
+      const cart = await this.cartRepository.findOne({
+        where: { user: { id: userId } },
+      });
 
-    if (!cart){
-      throw new NotFoundException('Your cart has been deleted')
+      if (!cart) {
+        throw new NotFoundException('Your cart has been deleted');
+      }
+
+      const cartItem = await this.cartItemRepository.findOne({
+        where: {
+          cart: { id: cart.id },
+          item: { id: itemId },
+        },
+      });
+
+      if (!cartItem) {
+        throw new NotFoundException('Item not found in your cart');
+      }
+
+      Object.assign(cartItem, updateCartItemDto);
+      return await this.cartItemRepository.save(cartItem);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
-
-    const cartItem = await this.cartItemRepository.findOne({
-      where: {
-        cart: { id: cart.id },
-        item: { id: itemId },
-      },
-    });
-
-    if (!cartItem) {
-      throw new NotFoundException('Item not found in your cart');
-    }
-
-    Object.assign(cartItem, updateCartItemDto);
-    return await this.cartItemRepository.save(cartItem);
   }
 }

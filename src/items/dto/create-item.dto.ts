@@ -12,10 +12,6 @@ import { ItemClassification } from '../entities/item.entity'; // Adjust path as 
 
 export class CreateItemDto {
   @IsNotEmpty()
-  @IsNumber()
-  restaurantId: number;
-
-  @IsNotEmpty()
   @IsString()
   @MaxLength(30)
   name: string;
